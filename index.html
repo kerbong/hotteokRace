@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>도우 레이스</title>
+    <style>
+      canvas {
+        border: 1px solid black;
+        display: block;
+      }
+      #control-panel {
+        display: flex;
+        flex-direction: column;
+      }
+      #ranking {
+        margin-left: 20px;
+        width: 200px;
+      }
+      .hidden {
+        display: none;
+      }
+      .bold {
+        font-weight: bold;
+      }
+      #gameContainer {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="control-panel">
+      <label for="numDoughs">참가할 도우 수:</label>
+      <input type="number" id="numDoughs" value="5" min="1" max="10" />
+      <div id="doughNames"></div>
+      <label for="backgroundSelect">배경 선택:</label>
+      <select id="backgroundSelect">
+        <option value="white">흰색</option>
+        <option value="pokemon">포켓몬</option>
+        <option value="pororo">뽀로로</option>
+      </select>
+      <button id="startButton">게임 스타트!</button>
+      <button id="pauseButton" class="hidden">일시정지</button>
+      <button id="restartButton" class="hidden">다시 시작</button>
+    </div>
+    <div id="gameContainer">
+      <canvas id="gameCanvas" width="800" height="400"></canvas>
+      <div id="ranking"></div>
+    </div>
+    <script src="game.js"></script>
+  </body>
+</html>
