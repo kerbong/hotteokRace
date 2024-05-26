@@ -1,10 +1,15 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const MAP_WIDTH = 4000;
-const MAP_HEIGHT = (canvas.height * 2) / 3;
-const DOUGH_RADIUS = 20;
-const BASE_SPEED = 2;
+const MAP_WIDTH = 3000; // 전체 맵의 너비
+const MAP_HEIGHT = 700; // 전체 맵의 높이
+const CANVAS_WIDTH = 800; // 캔버스의 너비
+const CANVAS_HEIGHT = 700; // 캔버스의 높이
+const DOUGH_RADIUS = 20; // 도우의 반지름
+const BASE_SPEED = 2; // 기본 속도
+const MINIMAP_SCALE = 0.1;
+const MINIMAP_WIDTH = MAP_WIDTH * MINIMAP_SCALE;
+const MINIMAP_HEIGHT = MAP_HEIGHT * MINIMAP_SCALE;
 const DOUGH_COLORS = ["red", "blue", "green", "yellow", "purple"];
 let doughs = [];
 let obstacles = [];
@@ -32,102 +37,58 @@ class Dough {
     this.verticalDirection = Math.random() > 0.5 ? 1 : -1;
     this.verticalMovementTimer = 0;
   }
-
   draw() {
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.arc(this.x - cameraX, this.y, DOUGH_RADIUS, 0, Math.PI * 2);
-    ctx.closePath();
-    ctx.fill();
+    // 픽셀 아트로 원 형태 그리기
+    const pixelSize = 4; // 픽셀 크기
+    const pattern = [
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 1, 1, 1, 1, 1, 0],
+      [1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1],
+      [0, 1, 1, 1, 1, 1, 0],
+      [0, 0, 1, 1, 1, 0, 0],
+    ];
+
+    for (let row = 0; row < pattern.length; row++) {
+      for (let col = 0; col < pattern[row].length; col++) {
+        if (pattern[row][col] === 1) {
+          ctx.fillStyle = this.color;
+          ctx.fillRect(
+            this.x - cameraX + (col - 3) * pixelSize,
+            this.y + (row - 3) * pixelSize,
+            pixelSize,
+            pixelSize
+          );
+        }
+      }
+    }
+
+    // 얼굴 그리기
     ctx.fillStyle = "black";
     ctx.fillText(
       this.name,
       this.x - cameraX - DOUGH_RADIUS / 2,
       this.y - DOUGH_RADIUS - 10
     );
+    ctx.fillText(
+      this.face,
+      this.x - cameraX - DOUGH_RADIUS / 2,
+      this.y - DOUGH_RADIUS - 25
+    );
 
-    // 애니메이션 프레임에 따른 눈 모양 변경
-    if (this.face === "x x") {
-      this.drawCrossEye();
-    } else if (this.animationFrame % 30 < 15) {
-      ctx.fillRect(
-        this.x - cameraX - DOUGH_RADIUS / 2,
-        this.y - DOUGH_RADIUS / 2,
-        4,
-        8
-      );
-      ctx.fillRect(
-        this.x - cameraX + DOUGH_RADIUS / 2 - 4,
-        this.y - DOUGH_RADIUS / 2,
-        4,
-        8
-      );
+    // 애니메이션 프레임 변경
+    if (this.animationFrame % 30 < 15) {
+      // X 눈 모양
+      ctx.fillRect(this.x - cameraX - 6, this.y - 4, 4, 4); // 왼쪽 눈
+      ctx.fillRect(this.x - cameraX + 2, this.y - 4, 4, 4); // 오른쪽 눈
+      ctx.fillRect(this.x - cameraX - 4, this.y - 6, 4, 4); // 왼쪽 눈
+      ctx.fillRect(this.x - cameraX + 4, this.y - 6, 4, 4); // 오른쪽 눈
     } else {
-      ctx.fillRect(
-        this.x - cameraX - DOUGH_RADIUS / 2,
-        this.y - DOUGH_RADIUS / 2,
-        8,
-        4
-      );
-      ctx.fillRect(
-        this.x - cameraX + DOUGH_RADIUS / 2 - 8,
-        this.y - DOUGH_RADIUS / 2,
-        8,
-        4
-      );
+      // o 눈 모양
+      ctx.fillRect(this.x - cameraX - 4, this.y - 4, 4, 8); // 왼쪽 눈
+      ctx.fillRect(this.x - cameraX + 4, this.y - 4, 4, 8); // 오른쪽 눈
     }
-  }
-
-  drawCrossEye() {
-    ctx.fillRect(
-      this.x - cameraX - DOUGH_RADIUS / 2 - 2,
-      this.y - DOUGH_RADIUS / 2,
-      4,
-      4
-    ); // 왼쪽 위
-    ctx.fillRect(
-      this.x - cameraX - DOUGH_RADIUS / 2 + 2,
-      this.y - DOUGH_RADIUS / 2,
-      4,
-      4
-    ); // 오른쪽 위
-    ctx.fillRect(
-      this.x - cameraX - DOUGH_RADIUS / 2 - 2,
-      this.y - DOUGH_RADIUS / 2 + 4,
-      4,
-      4
-    ); // 왼쪽 아래
-    ctx.fillRect(
-      this.x - cameraX - DOUGH_RADIUS / 2 + 2,
-      this.y - DOUGH_RADIUS / 2 + 4,
-      4,
-      4
-    ); // 오른쪽 아래
-
-    ctx.fillRect(
-      this.x - cameraX + DOUGH_RADIUS / 2 - 6,
-      this.y - DOUGH_RADIUS / 2,
-      4,
-      4
-    ); // 왼쪽 위
-    ctx.fillRect(
-      this.x - cameraX + DOUGH_RADIUS / 2 - 2,
-      this.y - DOUGH_RADIUS / 2,
-      4,
-      4
-    ); // 오른쪽 위
-    ctx.fillRect(
-      this.x - cameraX + DOUGH_RADIUS / 2 - 6,
-      this.y - DOUGH_RADIUS / 2 + 4,
-      4,
-      4
-    ); // 왼쪽 아래
-    ctx.fillRect(
-      this.x - cameraX + DOUGH_RADIUS / 2 - 2,
-      this.y - DOUGH_RADIUS / 2 + 4,
-      4,
-      4
-    ); // 오른쪽 아래
   }
 
   update() {
@@ -147,7 +108,7 @@ class Dough {
         if (this.pressTime >= 120) {
           this.isPressed = false;
           this.pressTime = 0;
-          this.face = "x x";
+          this.face = "o o";
         }
       } else if (this.isSlowed) {
         this.x += 1;
@@ -158,13 +119,16 @@ class Dough {
           this.face = "o o";
         }
       }
-      if (this.x >= MAP_WIDTH) {
+
+      if (this.x >= MAP_WIDTH - 50) {
+        // 결승선을 약간 안쪽으로 이동
         this.finished = true;
         if (!rankings.includes(this)) {
           rankings.push(this);
         }
         this.face = Math.random() > 0.5 ? "- -" : "^ ^";
       }
+
       this.verticalMovementTimer++;
       if (this.verticalMovementTimer > 300) {
         this.y += this.verticalDirection * (BASE_SPEED / 4);
@@ -172,6 +136,7 @@ class Dough {
           this.verticalDirection *= -1;
         }
       }
+
       doughs.forEach((otherDough) => {
         if (
           otherDough !== this &&
@@ -183,6 +148,7 @@ class Dough {
         }
       });
     }
+
     this.animationFrame++;
   }
 }
@@ -342,24 +308,37 @@ function drawPixelArtBackground(type) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
+// 결승선 표시
 function drawFinishLine() {
-  const finishX = MAP_WIDTH - cameraX;
-  ctx.fillStyle = "black";
-  ctx.fillRect(finishX, 0, 20, canvas.height);
-  for (let i = 0; i < canvas.height; i += 40) {
-    ctx.fillStyle = "white";
-    ctx.fillRect(finishX, i, 20, 20);
+  const pixelSize = 2;
+  const finishX = MAP_WIDTH - 50;
+  for (let y = 0; y < CANVAS_HEIGHT; y += pixelSize * 2) {
+    ctx.fillStyle = "red";
+    ctx.fillRect(finishX - cameraX, y, pixelSize, pixelSize);
   }
 }
 
 function drawMinimap() {
-  ctx.strokeStyle = "black";
-  ctx.strokeRect(10, 10, 100, 20);
+  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+  ctx.fillRect(10, 10, MINIMAP_WIDTH, MINIMAP_HEIGHT);
+
   doughs.forEach((dough) => {
     ctx.fillStyle = dough.color;
-    const miniX = (dough.x / MAP_WIDTH) * 100;
-    ctx.fillRect(miniX, 10, 4, 20);
+    ctx.fillRect(
+      10 + dough.x * MINIMAP_SCALE,
+      10 + dough.y * MINIMAP_SCALE,
+      DOUGH_RADIUS * MINIMAP_SCALE,
+      DOUGH_RADIUS * MINIMAP_SCALE
+    );
   });
+
+  ctx.strokeStyle = "red";
+  ctx.strokeRect(
+    10 + cameraX * MINIMAP_SCALE,
+    10,
+    canvas.width * MINIMAP_SCALE,
+    MINIMAP_HEIGHT
+  );
 }
 
 function generateObstacles() {
@@ -389,20 +368,28 @@ function updateRankings() {
 
 function update() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  cameraX += BASE_SPEED;
+
   drawBackground();
   drawFinishLine();
-  doughs.forEach((dough) => dough.update());
-  obstacles.forEach((obstacle) => obstacle.update());
+
   doughs.forEach((dough) => {
+    dough.update();
+    dough.draw();
     obstacles.forEach((obstacle) => obstacle.checkCollision(dough));
   });
-  cameraX = Math.max(
-    0,
-    Math.min(doughs[0].x - canvas.width / 2, MAP_WIDTH - canvas.width)
-  );
-  doughs.forEach((dough) => dough.draw());
-  obstacles.forEach((obstacle) => obstacle.draw());
+
+  obstacles.forEach((obstacle) => {
+    obstacle.update();
+    obstacle.draw();
+  });
+
   drawMinimap();
+
+  if (cameraX > MAP_WIDTH - canvas.width) {
+    cameraX = MAP_WIDTH - canvas.width;
+  }
+
   updateRankings();
 }
 
@@ -459,5 +446,45 @@ function restartGame() {
 document.getElementById("startButton").addEventListener("click", startGame);
 document.getElementById("pauseButton").addEventListener("click", pauseGame);
 document.getElementById("restartButton").addEventListener("click", restartGame);
+
+function updateDoughNames() {
+  const numDoughs = parseInt(document.getElementById("numDoughs").value);
+  const doughNamesContainer = document.getElementById("doughNames");
+  doughNamesContainer.innerHTML = "";
+
+  for (let i = 0; i < numDoughs; i++) {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.id = `doughName${i}`;
+    input.placeholder = `Dough ${i + 1} Name`;
+    doughNamesContainer.appendChild(input);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("numDoughs")
+    .addEventListener("input", updateDoughNames);
+
+  canvas.addEventListener("click", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    if (
+      x >= 10 &&
+      x <= 10 + MINIMAP_WIDTH &&
+      y >= 10 &&
+      y <= 10 + MINIMAP_HEIGHT
+    ) {
+      const mapX = (x - 10) / MINIMAP_SCALE;
+      cameraX = mapX - canvas.width / 2;
+      if (cameraX < 0) cameraX = 0;
+      if (cameraX > MAP_WIDTH - canvas.width)
+        cameraX = MAP_WIDTH - canvas.width;
+    }
+  });
+
+  updateDoughNames();
+});
 
 restartGame();
